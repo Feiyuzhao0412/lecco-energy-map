@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lecco Energy Data Explorer</title>
+  <meta name="description" content="Interactive map of Lecco CER electricity meters with monthly energy and 15-minute load profiles.">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">BS2027 · Community energy research</p>
+        <h1>Lecco Energy Data Explorer</h1>
+        <p class="subtitle">Click a location to inspect its monthly energy and typical 15-minute load profile.</p>
+      </div>
+      <div class="summary" aria-label="Dataset summary">
+        <div><strong id="podCount">54</strong><span>PODs</span></div>
+        <div><strong id="locationCount">46</strong><span>Locations</span></div>
+        <div><strong id="powerCount">24</strong><span>15-min PODs</span></div>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="Map controls">
+      <label class="search-wrap">
+        <span class="sr-only">Search by address or POD</span>
+        <input id="searchInput" type="search" placeholder="Search address or POD…" autocomplete="off">
+      </label>
+      <div class="filter-group" role="group" aria-label="Filter by data availability">
+        <button class="filter active" type="button" data-filter="all">All</button>
+        <button class="filter" type="button" data-filter="power">15-minute data</button>
+        <button class="filter" type="button" data-filter="monthly">Monthly only</button>
+      </div>
+      <div class="legend" aria-label="Map legend">
+        <span><i class="dot dot-power"></i>Monthly + 15-min</span>
+        <span><i class="dot dot-monthly"></i>Monthly only</span>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div id="map" aria-label="Map of electricity data locations"></div>
+
+      <aside class="detail-panel" aria-live="polite">
+        <div class="detail-head">
+          <div>
+            <p class="location-kicker" id="locationKicker">Selected location</p>
+            <h2 id="locationTitle">Choose a point on the map</h2>
+            <p id="locationMeta" class="location-meta">Address and POD details will appear here.</p>
+          </div>
+          <span id="dataBadge" class="data-badge">—</span>
+        </div>
+
+        <div class="pod-list" id="podList"></div>
+
+        <div class="metrics" id="metrics">
+          <div><span>Latest observed energy</span><strong id="latestEnergy">—</strong><small id="latestEnergyNote">—</small></div>
+          <div><span>Peak 15-min power</span><strong id="peakPower">—</strong><small id="powerCoverage">—</small></div>
+          <div><span>Monthly coverage</span><strong id="monthCoverage">—</strong><small id="monthRange">—</small></div>
+        </div>
+
+        <section class="chart-section">
+          <div class="chart-heading">
+            <div>
+              <h3>Monthly electricity consumption</h3>
+              <p>F1, F2 and F3 tariff bands; total shown as a line.</p>
+            </div>
+            <label>Year
+              <select id="yearSelect"></select>
+            </label>
+          </div>
+          <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+        </section>
+
+        <section class="chart-section" id="profileSection">
+          <div class="chart-heading">
+            <div>
+              <h3>Typical daily load profile</h3>
+              <p>Mean power at each 15-minute interval across available records.</p>
+            </div>
+          </div>
+          <div class="chart-wrap profile"><canvas id="profileChart"></canvas></div>
+        </section>
+
+        <p class="method-note" id="methodNote"></p>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
