@@ -17,7 +17,7 @@
       <div>
         <p class="eyebrow">BS2027 · Community energy research</p>
         <h1>Lecco Energy Data Explorer</h1>
-        <p class="subtitle">Click a location to inspect its monthly energy and typical 15-minute load profile.</p>
+        <p class="subtitle">Click a location to inspect monthly energy and compare winter and summer 15-minute load profiles.</p>
       </div>
       <div class="summary" aria-label="Dataset summary">
         <div><strong id="podCount">54</strong><span>PODs</span></div>
@@ -79,8 +79,12 @@
         <section class="chart-section" id="profileSection">
           <div class="chart-heading">
             <div>
-              <h3>Typical daily load profile</h3>
-              <p>Mean power at each 15-minute interval across available records.</p>
+              <h3>Winter vs summer daily load profile</h3>
+              <p id="profileDescription">Mean 15-minute power. Winter = Dec–Feb; summer = Jun–Aug.</p>
+            </div>
+            <div class="profile-toggle" role="group" aria-label="Choose day type">
+              <button class="day-type active" type="button" data-day-type="weekday">Weekday</button>
+              <button class="day-type" type="button" data-day-type="weekend">Weekend</button>
             </div>
           </div>
           <div class="chart-wrap profile"><canvas id="profileChart"></canvas></div>

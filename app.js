@@ -24,6 +24,7 @@ let searchTerm = '';
 let selectedId = null;
 let monthlyChart = null;
 let profileChart = null;
+let activeDayType = 'weekday';
 const markerById = new Map();
 
 const energyValues = DATA.locations.map(d => d.latest12ObservedKWh).filter(Boolean);
@@ -100,6 +101,16 @@ document.getElementById('searchInput').addEventListener('input', event => {
   }
 });
 
+document.querySelectorAll('.day-type').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.day-type').forEach(item => item.classList.remove('active'));
+    button.classList.add('active');
+    activeDayType = button.dataset.dayType;
+    const location = DATA.locations.find(item => item.id === selectedId);
+    if (location) drawProfileChart(location);
+  });
+});
+
 function formatEnergy(value) {
   if (value >= 1_000_000) return `${fmt1.format(value / 1_000_000)} GWh`;
   if (value >= 1_000) return `${fmt1.format(value / 1_000)} MWh`;
@@ -147,8 +158,12 @@ function selectLocation(id, pan = true) {
   drawMonthlyChart(location, yearSelect.value);
   drawProfileChart(location);
 
+  const seasonal = location.seasonalProfiles;
+  const coverage = seasonal
+    ? ` Winter: ${seasonal.winter.firstDate || 'not available'}${seasonal.winter.lastDate ? ` – ${seasonal.winter.lastDate}` : ''}, ${seasonal.winter.podCount} POD(s). Summer: ${seasonal.summer.firstDate || 'not available'}${seasonal.summer.lastDate ? ` – ${seasonal.summer.lastDate}` : ''}, ${seasonal.summer.podCount} POD(s).`
+    : '';
   const powerNote = location.powerPods.length
-    ? `The 15-minute profile uses ${location.powerPods.length} of ${location.pods.length} POD(s) at this address. Power values are averaged by quarter-hour across the available measurement periods.`
+    ? `The seasonal 15-minute profile uses ${location.powerPods.length} of ${location.pods.length} POD(s) at this address. Values are mean power by quarter-hour across all available winter or summer records; POD profiles at the same location are summed.${coverage}`
     : 'This address has monthly energy records only. A typical daily load profile cannot be calculated from the supplied files.';
   document.getElementById('methodNote').textContent = `${powerNote} Monthly duplicate records were reconciled against integrated 15-minute power where overlap was available.`;
 }
@@ -186,19 +201,27 @@ function drawMonthlyChart(location, year) {
 function drawProfileChart(location) {
   const section = document.getElementById('profileSection');
   if (profileChart) profileChart.destroy();
-  if (!location.powerPods.length) {
+  if (!location.powerPods.length || !location.seasonalProfiles) {
     section.style.display = 'none';
     return;
   }
   section.style.display = '';
+  const winter = location.seasonalProfiles.winter[activeDayType];
+  const summer = location.seasonalProfiles.summer[activeDayType];
+  const winterAvailable = winter.some(Number.isFinite);
+  const summerAvailable = summer.some(Number.isFinite);
+  const availableText = [winterAvailable ? 'winter' : null, summerAvailable ? 'summer' : null].filter(Boolean).join(' and ');
+  document.getElementById('profileDescription').textContent = availableText
+    ? `Mean 15-minute power for ${activeDayType}s. Available: ${availableText}. Winter = Dec–Feb; summer = Jun–Aug.`
+    : `No seasonal ${activeDayType} profile is available for this location.`;
   const labels = Array.from({ length: 96 }, (_, i) => `${String(Math.floor(i / 4)).padStart(2, '0')}:${String((i % 4) * 15).padStart(2, '0')}`);
   profileChart = new Chart(document.getElementById('profileChart'), {
     type: 'line',
     data: {
       labels,
       datasets: [
-        { label: 'Weekday', data: location.weekdayProfile, borderColor: '#e76f00', backgroundColor: 'rgba(231,111,0,.08)', fill: true, pointRadius: 0, borderWidth: 2, tension: .25, spanGaps: true },
-        { label: 'Weekend', data: location.weekendProfile, borderColor: '#207a61', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 1.8, borderDash: [5, 4], tension: .25, spanGaps: true }
+        { label: 'Winter', data: winter, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.08)', fill: true, pointRadius: 0, borderWidth: 2, tension: .25, spanGaps: true },
+        { label: 'Summer', data: summer, borderColor: '#e76f00', backgroundColor: 'rgba(231,111,0,.06)', fill: true, pointRadius: 0, borderWidth: 2, tension: .25, spanGaps: true }
       ]
     },
     options: {
